@@ -12,7 +12,8 @@ module.exports = {
 			errorMessage: 'Nothing found.',
 			suggestMinLength: 3,
 			suggestTimeout: 250,
-			defaultMarkGeocode: true
+			defaultMarkGeocode: true,
+			defaultNoResults: true
 		},
 
 		includes: L.Mixin.Events,
@@ -90,6 +91,9 @@ module.exports = {
 			this.on('finishgeocode', function() {
 				L.DomUtil.removeClass(this._container, 'leaflet-control-geocoder-throbber');
 			}, this);
+    		if (this.options.defaultNoResults) {
+                this.on('noResults', this.noResults, this);
+    		}
 
 			L.DomEvent.disableClickPropagation(container);
 
@@ -107,8 +111,12 @@ module.exports = {
 					this._alts.appendChild(this._createAlt(results[i], i));
 				}
 			} else {
-				L.DomUtil.addClass(this._errorElement, 'leaflet-control-geocoder-error');
+				this.fire('noResults');
 			}
+		},
+
+		noResults: function() {
+				L.DomUtil.addClass(this._errorElement, 'leaflet-control-geocoder-error');
 		},
 
 		markGeocode: function(result) {
