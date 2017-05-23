@@ -14,8 +14,7 @@ module.exports = {
 			errorMessage: 'Nothing found.',
 			suggestMinLength: 3,
 			suggestTimeout: 250,
-			defaultMarkGeocode: true,
-			defaultNoResults: true
+			defaultMarkGeocode: true
 		},
 
 		includes: L.Mixin.Events,
@@ -93,9 +92,6 @@ module.exports = {
 			this.on('finishgeocode', function() {
 				L.DomUtil.removeClass(this._container, 'leaflet-control-geocoder-throbber');
 			}, this);
-    		if (this.options.defaultNoResults) {
-                this.on('noResults', this.noResults, this);
-    		}
 
 			L.DomEvent.disableClickPropagation(container);
 
@@ -113,12 +109,8 @@ module.exports = {
 					this._alts.appendChild(this._createAlt(results[i], i));
 				}
 			} else {
-				this.fire('noResults');
-			}
-		},
-
-		noResults: function() {
 				L.DomUtil.addClass(this._errorElement, 'leaflet-control-geocoder-error');
+			}
 		},
 
 		markGeocode: function(result) {
@@ -140,17 +132,19 @@ module.exports = {
 
 		_geocode: function(suggest) {
 			var requestCount = ++this._requestCount,
-				mode = suggest ? 'suggest' : 'geocode';
+				mode = suggest ? 'suggest' : 'geocode',
+				eventData = {input: this._input.value};
 
 			this._lastGeocode = this._input.value;
 			if (!suggest) {
 				this._clearResults();
 			}
 
-			this.fire('start' + mode);
+			this.fire('start' + mode, eventData);
 			this.options.geocoder[mode](this._input.value, function(results) {
 				if (requestCount === this._requestCount) {
-					this.fire('finish' + mode);
+					eventData.results = results;
+					this.fire('finish' + mode, eventData);
 					this._geocodeResult(results, suggest);
 				}
 			}, this);
@@ -295,7 +289,6 @@ module.exports = {
 		return new L.Control.Geocoder(options);
 	}
 };
-
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./geocoders/nominatim":9}],2:[function(_dereq_,module,exports){
 (function (global){
